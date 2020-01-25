@@ -48,15 +48,13 @@ void loop() {
     /*
      * Moving motor one full revolution using the degree notation
      */
-    stepper.rotate(45);
+    stepper.rotate(360);
 
     /*
      * Moving motor to original position using steps
      */
-    stepper.move(-MOTOR_STEPS*MICROSTEPS);
+    //stepper.move(-MOTOR_STEPS*MICROSTEPS);
 
     // pause and allow the motor to be moved by hand
     // stepper.disable();
-
-    delay(5000);
 }
