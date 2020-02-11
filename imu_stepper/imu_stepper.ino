@@ -1,38 +1,26 @@
 /*
-    MPU6050 Triple Axis Gyroscope & Accelerometer. Pitch & Roll & Yaw Gyroscope Example.
-    Read more: http://www.jarzebski.pl/arduino/czujniki-i-sensory/3-osiowy-zyroskop-i-akcelerometr-mpu6050.html
-    GIT: https://github.com/jarzebski/Arduino-MPU6050
-    Web: http://www.jarzebski.pl
-    (c) 2014 by Korneliusz Jarzebski
+This code code 
 */
 
 #include <Arduino.h>
 #include "BasicStepperDriver.h"
+#include <Wire.h>
+#include <MPU6050.h>
 
-// Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
+// Our motor has 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 200
 #define RPM 550
 
-// Since microstepping is set externally, make sure this matches the selected mode
-// If it doesn't, the motor will move at a different RPM than chosen
-// 1=full step, 2=half step etc.
+// Setting 16 microsteps on the A4988 requires pulling MS1, MS2 and MS3 high
 #define MICROSTEPS 16
 
-// All the wires needed for full functionality
+// A4988 pins
 #define DIR 4
 #define STEP 3
-//Uncomment line to use enable/disable functionality
-//#define SLEEP 13
 
-// 2-wire basic config, microstepping is hardwired on the driver
+// For the Mega connect the IMU's SCL to D21 and SDA to D20
+
 BasicStepperDriver stepper(MOTOR_STEPS, DIR, STEP);
-
-//Uncomment line to use enable/disable functionality
-//BasicStepperDriver stepper(MOTOR_STEPS, DIR, STEP, SLEEP);
-
-
-#include <Wire.h>
-#include <MPU6050.h>
 
 MPU6050 mpu;
 
@@ -49,7 +37,7 @@ void setup()
 {
   Serial.begin(115200);
 
-  // Initialize MPU6050
+  // Initializes MPU6050
   while(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G))
   {
     Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
@@ -57,16 +45,12 @@ void setup()
   }
   
   // Calibrate gyroscope. The calibration must be at rest.
-  // If you don't want calibrate, comment this line.
   mpu.calibrateGyro();
 
   // Set threshold sensivty. Default 3.
-  // If you don't want use threshold, comment this line or set 0.
   mpu.setThreshold(3);
 
   stepper.begin(RPM, MICROSTEPS);
-    // if using enable/disable on ENABLE pin (active LOW) instead of SLEEP uncomment next line
-    // stepper.setEnableActiveState(LOW);
 }
 
 void loop()
@@ -88,31 +72,8 @@ void loop()
   Serial.print(roll);  
   Serial.print(" Yaw = ");
   Serial.println(yaw);
-
-  // Wait to full timeStep period
-
-
-  // energize coils - the motor will hold position
-    // stepper.enable();
-
-    
-  
-    /*
-     * Moving motor one full revolution using the degree notation
-     */
-     
-  //stepper.rotate(360);
- 
-    /*
-     * Moving motor to original position using steps
-     */
-    stepper.rotate(-norm.ZAxis * timeStep);
-    //delay(5);
-    //stepper.stop();
-    // pause and allow the motor to be moved by hand
-    // stepper.disable();
-    delay((timeStep*1000) - (millis() - timer));
-
-
-  
+  // Moves the stepper back the distance it has travelled relative to its starting position
+  stepper.rotate(norm.ZAxis * timeStep);
+  // Makes sure each loop takes the same ammount of time
+  delay((timeStep*1000) - (millis() - timer));
 }
